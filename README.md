@@ -125,72 +125,77 @@ SILENTFIX/
 
 ---
 
-## 4. Verification & Test Execution Suite (44/44 Passing)
+## 4. Verification & Test Execution Suite (53/53 Passing)
 
-All 44 automated tests across all 9 modules and 3 resilience pillars pass cleanly:
+All 53 automated tests across all 10 modules, 3 resilience pillars, and audit regressions pass cleanly on macOS and Windows:
 
 ```text
-============================= test session starts =============================
-platform win32 -- Python 3.14.8, pytest-9.2.0, pluggy-1.7.0
-plugins: anyio-4.15.1, asyncio-1.5.0
-asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=function
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
+plugins: anyio-4.12.1, asyncio-1.2.0
 
-tests/test_aws_sandbox.py::test_cloud_pretest_offline_simulation PASSED
-tests/test_aws_sandbox.py::test_cloud_pretest_request_validation PASSED
-tests/test_aws_sandbox.py::test_sandbox_api_endpoints PASSED
-tests/test_cli_healer.py::test_extract_missing_command_various_shells PASSED
-tests/test_cli_healer.py::test_diagnose_terminal_error_winget_fallback PASSED
-tests/test_cli_healer.py::test_diagnose_terminal_error_unknown_command PASSED
-tests/test_cli_healer.py::test_healer_diagnoses_missing_git PASSED
-tests/test_compat_fixer.py::test_build_layer_string PASSED
-tests/test_compat_fixer.py::test_apply_shim_rejects_non_exe PASSED
-tests/test_compat_fixer.py::test_apply_shim_rejects_non_existent_file PASSED
-tests/test_compat_fixer.py::test_compat_api_apply_and_undo_flow PASSED
-tests/test_crash_recovery.py::test_startup_crash_recovery_sweep_detects_interrupted_sessions PASSED
-tests/test_crash_recovery.py::test_resolve_recovery_via_rollback PASSED
-tests/test_crash_recovery.py::test_resolve_recovery_via_dismiss PASSED
-tests/test_gemini_brain.py::test_missing_parameters_transitions_to_needs_info PASSED
-tests/test_gemini_brain.py::test_complete_intent_resolves_and_mints_token PASSED
-tests/test_gemini_brain.py::test_intent_prioritization_and_comma_separated_name PASSED
-tests/test_gemini_brain.py::test_reject_insecure_intent PASSED
-tests/test_gemini_brain.py::test_safe_non_shell_git_execution PASSED
-tests/test_gemini_brain.py::test_name_extraction_supports_hyphens_and_accents PASSED
-tests/test_gemini_brain.py::test_authorized_brain_execution_with_token PASSED
-tests/test_screen_guard.py::test_detect_injections_catches_malicious_commands PASSED
-tests/test_screen_guard.py::test_detect_pii_identifies_sensitive_entities PASSED
-tests/test_screen_guard.py::test_process_screen_image_in_memory_applies_gaussian_blur PASSED
-tests/test_screen_guard.py::test_sample_screen_inspection_generation PASSED
-tests/test_screen_guard.py::test_process_screen_handles_inverted_coordinates PASSED
-tests/test_spa_security.py::test_spa_directory_traversal_blocked PASSED
-tests/test_spa_security.py::test_spa_does_not_swallow_api_404 PASSED
-tests/test_sqlite_ledger.py::test_sqlite_wal_mode_configured PASSED
-tests/test_sqlite_ledger.py::test_session_lifecycle_and_event_logging PASSED
-tests/test_sqlite_ledger.py::test_atomic_rollback_lock_cas_and_409_conflict PASSED
-tests/test_trust_gate.py::test_enforce_https_source_success PASSED
-tests/test_trust_gate.py::test_enforce_https_source_rejects_http PASSED
-tests/test_trust_gate.py::test_validate_sha256_string PASSED
-tests/test_trust_gate.py::test_probe_token_issuance_and_single_use_eviction PASSED
-tests/test_trust_gate.py::test_probe_token_blocks_package_substitution PASSED
-tests/test_trust_gate.py::test_verify_package_manifest_known_catalog PASSED
-tests/test_trust_gate.py::test_verify_package_manifest_rejects_catalog_hash_mismatch PASSED
-tests/test_trust_gate.py::test_verify_package_manifest_requires_hash_for_unknown_package PASSED
-tests/test_trust_gate.py::test_probe_token_blocks_source_substitution PASSED
-tests/test_voice_and_cloud.py::test_elevenlabs_voice_returns_204_when_no_api_key PASSED
-tests/test_voice_and_cloud.py::test_off_thread_dynamodb_fallback_without_cloud_credentials PASSED
-tests/test_voice_and_cloud.py::test_privacy_preserving_s3_archive_telemetry PASSED
-tests/test_voice_and_cloud.py::test_cloud_audit_endpoint_and_session_token PASSED
+tests/test_audit_regressions.py (8 tests) ................ PASSED
+tests/test_aws_sandbox.py (3 tests) ...................... PASSED
+tests/test_cli_healer.py (4 tests) ....................... PASSED
+tests/test_compat_fixer.py (4 tests) ..................... PASSED
+tests/test_crash_recovery.py (3 tests) ................... PASSED
+tests/test_gemini_brain.py (7 tests) ..................... PASSED
+tests/test_screen_guard.py (5 tests) ..................... PASSED
+tests/test_spa_security.py (2 tests) ..................... PASSED
+tests/test_sqlite_ledger.py (3 tests) .................... PASSED
+tests/test_trust_gate.py (10 tests) ...................... PASSED
+tests/test_voice_and_cloud.py (4 tests) .................. PASSED
 
-============================= 44 passed in 8.77s ==============================
+======================== 53 passed, 1 warning in 27.07s ========================
 ```
 
 ---
 
-## 5. Quickstart
+## 5. Quickstart & Integration
 
-To run the unified application (FastAPI serving APIs and the production React SPA):
+### Prerequisites
+- Python 3.9+ (`python3`)
+- Node.js 18+ & npm (`node`, `npm`)
 
+### 1. Python Backend Setup
 ```bash
-# Start backend on localhost:8000
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+# From project root
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Configure environment
+cp -n .env.example .env
+# Edit .env with your ElevenLabs, Gemini, or AWS keys
 ```
-Navigate to `http://127.0.0.1:8000` to interact with the full SilentFix architecture and all resilience pillars.
+
+### 2. Frontend Build / Dev Setup
+```bash
+# Build production bundle (served directly by FastAPI)
+cd frontend
+npm install
+npm run build
+cd ..
+```
+
+### 3. Start Backend & Unified Application
+```bash
+# Run FastAPI with Uvicorn (serves API & React SPA on port 8000)
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --env-file .env
+```
+- Web Application & Dashboard: `http://127.0.0.1:8000`
+- Interactive OpenAPI Docs: `http://127.0.0.1:8000/docs`
+- Health Endpoint: `http://127.0.0.1:8000/api/health`
+
+### 4. Optional: Frontend Hot-Reload Dev Server
+```bash
+# In a separate terminal
+cd frontend
+npm run dev
+```
+Navigate to `http://localhost:5173` (requests automatically proxy to backend at `127.0.0.1:8000/api`).
+
+For detailed architecture guides and test evidence, see:
+- [Integration Setup Guide](docs/INTEGRATION_SETUP.md)
+- [Comprehensive Test Report](docs/TEST_REPORT.md)

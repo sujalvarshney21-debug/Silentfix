@@ -6,6 +6,7 @@ import asyncio
 import logging
 import secrets
 import time
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -21,7 +22,7 @@ logger = logging.getLogger("silentfix.compat_route")
 router = APIRouter(prefix="/api/compat", tags=["compat"])
 
 UNDO_TTL_SEC = 3600.0
-_compat_undo_store: dict[str, tuple[str, str | None, float]] = {}
+_compat_undo_store: dict[str, tuple[str, Optional[str], float]] = {}
 
 
 def _prune_expired_undo_tokens() -> None:
@@ -33,7 +34,7 @@ def _prune_expired_undo_tokens() -> None:
 class ApplyCompatResponse(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
     result: CompatShimResult
-    undo_token: str | None = None
+    undo_token: Optional[str] = None
 
 
 class UndoCompatRequest(BaseModel):

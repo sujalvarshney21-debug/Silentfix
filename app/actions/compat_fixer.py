@@ -11,7 +11,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -31,7 +31,7 @@ DisplayCompatFlag = Literal["HIGHDPIAWARE", "DPIUNAWARE", "GDIDPISCALING", "640X
 class CompatShimParams(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
     executable_path: str = Field(min_length=4, max_length=400)
-    os_mode: OsCompatMode | None = "WIN7RTM"
+    os_mode: Optional[OsCompatMode] = "WIN7RTM"
     display_flags: list[DisplayCompatFlag] = Field(default_factory=lambda: ["HIGHDPIAWARE"])
     run_as_admin: bool = False
 
@@ -41,7 +41,7 @@ class CompatShimResult(BaseModel):
     success: bool
     executable_path: str
     applied_layer: str
-    previous_layer: str | None = None
+    previous_layer: Optional[str] = None
     detail: str
 
 
@@ -57,10 +57,13 @@ def build_layer_string(params: CompatShimParams) -> str:
     return " ".join(tokens)
 
 
-def _read_compat_layer(exe_path: str) -> str | None:
+_simulated_registry: dict[str, str] = {}
+
+
+def _read_compat_layer(exe_path: str) -> Optional[str]:
     """Read existing AppCompat layer value from registry if present."""
     if winreg is None:
-        return None
+        return _simulated_registry.get(exe_path)
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, APPCOMPAT_SUBKEY, 0, winreg.KEY_READ) as key:
             val, _ = winreg.QueryValueEx(key, exe_path)
@@ -72,10 +75,15 @@ def _read_compat_layer(exe_path: str) -> str | None:
         return None
 
 
-def _write_compat_layer(exe_path: str, layer_value: str | None) -> None:
+def _write_compat_layer(exe_path: str, layer_value: Optional[str]) -> None:
     """Write or delete AppCompat layer value in HKCU registry."""
     if winreg is None:
-        raise RuntimeError("Windows compatibility shims are supported only on Windows.")
+        logger.debug("Non-Windows platform (%s): operating in simulated registry mode", sys.platform)
+        if layer_value is None:
+            _simulated_registry.pop(exe_path, None)
+        else:
+            _simulated_registry[exe_path] = layer_value
+        return
     try:
         with winreg.CreateKeyEx(
             winreg.HKEY_CURRENT_USER, APPCOMPAT_SUBKEY, 0, winreg.KEY_SET_VALUE
@@ -132,7 +140,7 @@ def apply_compatibility_shim(params: CompatShimParams) -> CompatShimResult:
         )
 
 
-def restore_compatibility_shim(executable_path: str, previous_layer: str | None) -> bool:
+def restore_compatibility_shim(executable_path: str, previous_layer: Optional[str]) -> bool:
     """Restore or remove compatibility layer flags for an executable."""
     try:
         _write_compat_layer(os.path.normpath(executable_path), previous_layer)

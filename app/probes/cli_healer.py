@@ -13,7 +13,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -63,9 +63,9 @@ class CliDiagnosis(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
     missing_command: str
     status: DiagnosisStatus
-    found_executable_path: str | None = None
-    directory_to_add: str | None = None
-    winget_package_id: str | None = None
+    found_executable_path: Optional[str] = None
+    directory_to_add: Optional[str] = None
+    winget_package_id: Optional[str] = None
     summary: str
     suggested_commands: list[str] = Field(default_factory=list)
 
@@ -76,7 +76,7 @@ NON_COMMAND_WORDS = {
 }
 
 
-def extract_missing_command(error_text: str) -> str | None:
+def extract_missing_command(error_text: str) -> Optional[str]:
     """Extract missing command name from common shell error messages."""
     patterns = [
         r"'([^']+)' is not recognized as an internal or external command",
@@ -99,7 +99,7 @@ def extract_missing_command(error_text: str) -> str | None:
     return None
 
 
-def find_executable_on_disk(command: str) -> Path | None:
+def find_executable_on_disk(command: str) -> Optional[Path]:
     """Scan common install directories for orphaned binaries with safety limits."""
     exe_names = [f"{command}.exe", f"{command}.cmd", f"{command}.bat", command]
 
@@ -131,7 +131,7 @@ def find_executable_on_disk(command: str) -> Path | None:
     return None
 
 
-def _search_disk_for_command(command: str) -> Path | str | None:
+def _search_disk_for_command(command: str) -> Optional[Union[Path, str]]:
     """Entry point for disk searching, allowing targeted testing hooks."""
     return find_executable_on_disk(command)
 

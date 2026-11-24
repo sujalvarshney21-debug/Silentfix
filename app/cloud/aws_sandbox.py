@@ -11,7 +11,7 @@ import logging
 import os
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 import boto3
 from pydantic import BaseModel, ConfigDict, Field
@@ -38,7 +38,7 @@ class CloudPretestReport(BaseModel):
     backend: Literal["aws_codebuild", "offline_simulated"]
     verdict: SandboxVerdict
     started_at: str
-    aws_build_id: str | None = None
+    aws_build_id: Optional[str] = None
     summary: str
 
 

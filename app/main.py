@@ -12,6 +12,12 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Load local environment configuration (.env and optional aws.env)
+load_dotenv(".env")
+load_dotenv("aws.env")
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
